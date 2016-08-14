@@ -49,11 +49,32 @@ public class FileServlet extends HttpServlet {
         else if("list".equals(command)) {
             this.list(req, resp);
         }
+        else if("delete".equals(command)) {
+            this.delete(req, resp);
+        }
         else {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             resp.getWriter().print("Invalid command");
             logger.error("Invalid command");
             return;
+        }
+    }
+    
+    private void delete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String path = req.getParameter("path");
+        if(path == null) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().print("Path is not set");
+            return;
+        }
+        
+        File file = new File(CommonUtils.getFilesDir() + path);
+        if(file.exists()) {
+            file.delete();
+            resp.getWriter().print("File has been successfully deleted");
+        }
+        else {
+            resp.getWriter().print("File does not exist");
         }
     }
     
