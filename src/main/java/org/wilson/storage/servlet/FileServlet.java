@@ -7,6 +7,8 @@ import java.io.InputStream;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 import javax.servlet.ServletException;
@@ -116,10 +118,24 @@ public class FileServlet extends HttpServlet {
         }
         
         File file = new File(CommonUtils.getFilesDir() + path);
-        File [] files = file.listFiles();
-        if(files != null) {
-            for(File f : files) {
-                resp.getWriter().println(f.getName());
+        List<File> files = new ArrayList<File>();
+        this.listFiles(file, files);
+        
+        String prefix = file.getAbsolutePath();
+        for(File f : files) {
+            String name = f.getAbsolutePath();
+            name = name.substring(prefix.length());
+            resp.getWriter().println(name);
+        }
+    }
+    
+    private void listFiles(File root, List<File> files) {
+        if(root.isFile()) {
+            files.add(root);
+        }
+        else {
+            for(File file : root.listFiles()) {
+                listFiles(file, files);
             }
         }
     }
