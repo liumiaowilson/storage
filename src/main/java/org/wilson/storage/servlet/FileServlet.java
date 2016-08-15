@@ -26,24 +26,24 @@ public class FileServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String command = req.getParameter("command");
-        if(command == null) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().print("Failed to find command");
-            logger.error("Failed to find command");
-            return;
-        }
-        
         String key = req.getParameter("key");
         String realKey = CommonUtils.getKey();
         if(realKey == null) {
             resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            resp.getWriter().print("Key is not set");
+            resp.getWriter().print("[ERROR]Key is not set");
             return;
         }
         if(!realKey.equals(key)) {
             resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            resp.getWriter().print("Key is invalid");
+            resp.getWriter().print("[ERROR]Key is invalid");
+            return;
+        }
+        
+        String command = req.getParameter("command");
+        if(command == null) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().print("[ERROR]Failed to find command");
+            logger.error("Failed to find command");
             return;
         }
         
@@ -62,7 +62,7 @@ public class FileServlet extends HttpServlet {
         else {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             resp.getWriter().print("Invalid command");
-            logger.error("Invalid command");
+            logger.error("[ERROR]Invalid command");
             return;
         }
     }
@@ -84,7 +84,7 @@ public class FileServlet extends HttpServlet {
         }
         catch(Exception e) {
             logger.error("failed to run command!", e);
-            resp.getWriter().print(e.getMessage());
+            resp.getWriter().print("[ERROR]" + e.getMessage());
         }
         finally {
             if(s != null) {
@@ -97,7 +97,7 @@ public class FileServlet extends HttpServlet {
         String path = req.getParameter("path");
         if(path == null) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().print("Path is not set");
+            resp.getWriter().print("[ERROR]Path is not set");
             return;
         }
         
@@ -107,7 +107,7 @@ public class FileServlet extends HttpServlet {
             resp.getWriter().print("File has been successfully deleted");
         }
         else {
-            resp.getWriter().print("File does not exist");
+            resp.getWriter().print("[ERROR]File does not exist");
         }
     }
     
@@ -144,14 +144,14 @@ public class FileServlet extends HttpServlet {
         String path = req.getParameter("path");
         if(path == null) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().print("Path is not set");
+            resp.getWriter().print("[ERROR]Path is not set");
             return;
         }
         
         String url = req.getParameter("url");
         if(url == null) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().print("Url is not set");
+            resp.getWriter().print("[ERROR]Url is not set");
             return;
         }
         
