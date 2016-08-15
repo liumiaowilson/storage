@@ -14,6 +14,10 @@ metadata-complete="false">
         <servlet-class>org.wilson.storage.servlet.ImageServlet</servlet-class>
     </servlet>
     <servlet>
+        <servlet-name>Video Servlet</servlet-name>
+        <servlet-class>org.wilson.storage.servlet.VideoServlet</servlet-class>
+    </servlet>
+    <servlet>
         <servlet-name>File Servlet</servlet-name>
         <servlet-class>org.wilson.storage.servlet.FileServlet</servlet-class>
     </servlet>
@@ -24,6 +28,10 @@ metadata-complete="false">
     <servlet-mapping>
         <servlet-name>Image Servlet</servlet-name>
         <url-pattern>/servlet/image</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>Video Servlet</servlet-name>
+        <url-pattern>/servlet/video</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>File Servlet</servlet-name>
