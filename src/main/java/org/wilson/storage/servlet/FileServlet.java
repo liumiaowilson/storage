@@ -1,9 +1,11 @@
 package org.wilson.storage.servlet;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
@@ -59,11 +61,44 @@ public class FileServlet extends HttpServlet {
         else if("execute".equals(command)) {
             this.execute(req, resp);
         }
+        else if("get".equals(command)) {
+            this.get(req, resp);
+        }
         else {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             resp.getWriter().print("Invalid command");
             logger.error("[ERROR]Invalid command");
             return;
+        }
+    }
+    
+    private void get(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String path = req.getParameter("path");
+        if(path == null) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().print("[ERROR]Path is not set");
+            return;
+        }
+        
+        File file = new File(CommonUtils.getFilesDir() + path);
+        if(file.exists()) {
+            InputStream in = new FileInputStream(file);
+            OutputStream out = resp.getOutputStream();
+            
+            byte [] buffer = new byte[1024];
+            while(true) {
+                int read = in.read(buffer);
+                if(read < 0) {
+                    break;
+                }
+                out.write(buffer, 0, read);
+            }
+            out.flush();
+            
+            in.close();
+        }
+        else {
+            resp.getWriter().print("[ERROR]File does not exist");
         }
     }
     
