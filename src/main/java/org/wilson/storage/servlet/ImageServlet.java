@@ -1,12 +1,17 @@
 package org.wilson.storage.servlet;
 
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import javax.imageio.ImageIO;
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServlet;
@@ -25,6 +30,7 @@ public class ImageServlet extends HttpServlet{
         response.setContentType("image/jpeg");
         
         boolean showImage = true;
+        boolean resize = false;
         
         String key = request.getParameter("key");
         String realKey = CommonUtils.getKey();
@@ -47,13 +53,37 @@ public class ImageServlet extends HttpServlet{
             path = path.trim();
         }
         
+        String widthStr = request.getParameter("width");
+        String heightStr = request.getParameter("height");
+        int width = 0;
+        int height = 0;
+        try {
+        	if(widthStr != null && heightStr != null) {
+        		width = Integer.parseInt(widthStr);
+        		height = Integer.parseInt(heightStr);
+        		resize = true;
+        	}
+        }
+        catch(Exception e) {
+        }
+        
         ServletOutputStream out = response.getOutputStream();
         InputStream is = this.getClass().getClassLoader().getResourceAsStream("image_not_found.png");
         
         if(showImage) {
             File imageFile = new File(CommonUtils.getFilesDir() + path);
             if(imageFile.exists()) {
-                is = new FileInputStream(imageFile);
+            	if(resize) {
+            		BufferedImage originalImage = ImageIO.read(imageFile);
+                	int type = originalImage.getType() == 0 ? BufferedImage.TYPE_INT_ARGB : originalImage.getType();
+                	BufferedImage resizedImage = this.resizeImage(originalImage, type, width, height);
+                	ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                	ImageIO.write(resizedImage, "jpg", baos);
+                	is = new ByteArrayInputStream(baos.toByteArray());
+            	}
+            	else {
+            		is = new FileInputStream(imageFile);
+            	}
             }
         }
           
@@ -67,5 +97,14 @@ public class ImageServlet extends HttpServlet{
           
         bin.close();  
         bout.close();  
+    }
+    
+    private BufferedImage resizeImage(BufferedImage originalImage, int type, int width, int height){
+    	BufferedImage resizedImage = new BufferedImage(width, height, type);
+    	Graphics2D g = resizedImage.createGraphics();
+    	g.drawImage(originalImage, 0, 0, width, height, null);
+    	g.dispose();
+
+    	return resizedImage;
     }
 }
