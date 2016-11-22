@@ -55,13 +55,18 @@ public class ImageServlet extends HttpServlet{
         
         String widthStr = request.getParameter("width");
         String heightStr = request.getParameter("height");
+        String adjustStr = request.getParameter("adjust");
         int width = 0;
         int height = 0;
+        boolean adjust = false;
         try {
         	if(widthStr != null && heightStr != null) {
         		width = Integer.parseInt(widthStr);
         		height = Integer.parseInt(heightStr);
         		resize = true;
+        	}
+        	if(adjustStr != null) {
+        		adjust = Boolean.parseBoolean(adjustStr);
         	}
         }
         catch(Exception e) {
@@ -76,6 +81,18 @@ public class ImageServlet extends HttpServlet{
             	if(resize) {
             		BufferedImage originalImage = ImageIO.read(imageFile);
                 	int type = originalImage.getType() == 0 ? BufferedImage.TYPE_INT_ARGB : originalImage.getType();
+                	int originalWidth = originalImage.getWidth();
+                	int originalHeight = originalImage.getHeight();
+                	if(adjust) {
+                		double ratio = originalWidth * 1.0 / originalHeight;
+                		int new_width = (int) (height * ratio);
+                		if(new_width > width) {
+                			height = (int) (width / ratio);
+                		}
+                		else{
+                			width = new_width;
+                		}
+                	}
                 	BufferedImage resizedImage = this.resizeImage(originalImage, type, width, height);
                 	ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 	ImageIO.write(resizedImage, "jpg", baos);
