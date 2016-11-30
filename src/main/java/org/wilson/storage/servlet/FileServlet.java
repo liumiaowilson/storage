@@ -1,5 +1,7 @@
 package org.wilson.storage.servlet;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -12,8 +14,11 @@ import java.nio.channels.ReadableByteChannel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import javax.servlet.ServletException;
+import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -64,11 +69,83 @@ public class FileServlet extends HttpServlet {
         else if("get".equals(command)) {
             this.get(req, resp);
         }
+        else if("download".equals(command)) {
+        	this.download(req, resp);
+        }
         else {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             resp.getWriter().print("Invalid command");
             logger.error("[ERROR]Invalid command");
             return;
+        }
+    }
+    
+    private List<File> getAllFiles(File file) {
+    	List<File> files = new ArrayList<File>();
+    	for(File f : file.listFiles()) {
+    		if(f.isDirectory()) {
+    			files.addAll(this.getAllFiles(f));
+    		}
+    		else {
+    			files.add(f);
+    		}
+    	}
+    	
+    	return files;
+    }
+    
+    private String getPath(File file, String root) {
+    	String absPath = file.getAbsolutePath();
+    	String path = absPath.substring(root.length());
+    	
+    	return path;
+    }
+    
+    private void download(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    	try {
+            String dir = CommonUtils.getFilesDir();
+            File dirFile = new File(dir);
+            dir = dirFile.getAbsolutePath();
+            List<File> files = this.getAllFiles(dirFile);
+            
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ZipOutputStream zos = new ZipOutputStream(baos);
+            byte [] bytes = new byte[2048];
+            for(File file : files) {
+            	String path = this.getPath(file, dir);
+            	FileInputStream fis = new FileInputStream(file);
+        		BufferedInputStream bis = new BufferedInputStream(fis);
+        		
+        		if(path.startsWith("/")) {
+        			path = path.substring(1);
+        		}
+        		zos.putNextEntry(new ZipEntry(path));
+        		int bytesRead;
+                while ((bytesRead = bis.read(bytes)) != -1) {
+                    zos.write(bytes, 0, bytesRead);
+                }
+                zos.closeEntry();
+                
+                bis.close();
+                fis.close();
+            }
+            
+            zos.flush();
+            baos.flush();
+            zos.close();
+            baos.close();
+            
+            byte [] zip = baos.toByteArray();
+
+            ServletOutputStream sos = resp.getOutputStream();
+            resp.setContentType("application/zip");
+            resp.setHeader("Content-Disposition", "attachment; filename=Data.zip");
+
+            sos.write(zip);
+            sos.flush();
+        }
+        catch (Exception e) {
+            logger.error(e);
         }
     }
     
